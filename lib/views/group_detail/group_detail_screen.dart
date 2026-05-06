@@ -3,11 +3,13 @@ import 'package:flutter_mobx/flutter_mobx.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import '../../controllers/expense_store.dart';
+import '../../controllers/group_store.dart';
 import '../../models/group.dart';
 import '../../models/expense.dart';
 import '../../theme/app_theme.dart';
 import '../widgets/design_components.dart';
 import '../add_expense/add_expense_screen.dart';
+import '../home/add_edit_group_screen.dart';
 
 class GroupDetailScreen extends StatefulWidget {
   final Group group;
@@ -20,12 +22,21 @@ class GroupDetailScreen extends StatefulWidget {
 
 class _GroupDetailScreenState extends State<GroupDetailScreen> {
   late ExpenseStore store;
+  late GroupStore groupStore;
 
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
     store = Provider.of<ExpenseStore>(context);
+    groupStore = Provider.of<GroupStore>(context);
     store.loadExpenses(widget.group.id);
+  }
+
+  Group get _currentGroup {
+    return groupStore.groups.firstWhere(
+      (g) => g.id == widget.group.id,
+      orElse: () => widget.group,
+    );
   }
 
   @override
@@ -44,21 +55,21 @@ class _GroupDetailScreenState extends State<GroupDetailScreen> {
                 SliverToBoxAdapter(
                   child: Padding(
                     padding: const EdgeInsets.fromLTRB(24, 16, 24, 8),
-                    child: _buildGroupHeader(),
+                    child: _buildGroupHeader(_currentGroup),
                   ),
                 ),
                 // Balance Card
                 SliverToBoxAdapter(
                   child: Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
-                    child: _buildBalanceCard(),
+                    child: _buildBalanceCard(_currentGroup),
                   ),
                 ),
                 // Add Expense Button
                 SliverToBoxAdapter(
                   child: Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-                    child: _buildAddExpenseButton(context),
+                    child: _buildAddExpenseButton(context, _currentGroup),
                   ),
                 ),
                 // Activities Header
@@ -118,7 +129,7 @@ class _GroupDetailScreenState extends State<GroupDetailScreen> {
                 SliverToBoxAdapter(
                   child: Padding(
                     padding: const EdgeInsets.all(24),
-                    child: _buildMembersSection(),
+                    child: _buildMembersSection(_currentGroup),
                   ),
                 ),
                 const SliverToBoxAdapter(child: SizedBox(height: 40)),
@@ -160,8 +171,15 @@ class _GroupDetailScreenState extends State<GroupDetailScreen> {
           ),
           const Spacer(),
           IconButton(
-            onPressed: () {},
-            icon: const Icon(Icons.settings_outlined, color: Color(0xFF94A3B8)),
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => AddEditGroupScreen(group: widget.group),
+                ),
+              );
+            },
+            icon: const Icon(Icons.edit_outlined, color: Color(0xFF94A3B8)),
           ),
           Container(
             width: 36,
@@ -178,17 +196,17 @@ class _GroupDetailScreenState extends State<GroupDetailScreen> {
     );
   }
 
-  Widget _buildGroupHeader() {
+  Widget _buildGroupHeader(Group group) {
     return Row(
       children: [
         Container(
           width: 64,
           height: 64,
           decoration: BoxDecoration(
-            color: widget.group.statusColor.withOpacity(0.2),
+            color: group.statusColor.withOpacity(0.2),
             borderRadius: BorderRadius.circular(20),
           ),
-          child: Icon(Icons.group, color: AppTheme.secondaryContainer, size: 32),
+          child: Icon(group.categoryIcon, color: AppTheme.secondaryContainer, size: 32),
         ),
         const SizedBox(width: 16),
         Expanded(
@@ -196,7 +214,7 @@ class _GroupDetailScreenState extends State<GroupDetailScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                widget.group.name,
+                group.name,
                 style: GoogleFonts.epilogue(
                   fontSize: 24,
                   fontWeight: FontWeight.w700,
@@ -205,7 +223,7 @@ class _GroupDetailScreenState extends State<GroupDetailScreen> {
               ),
               const SizedBox(height: 4),
               Text(
-                '${widget.group.members.length} integrantes ativos',
+                '${group.members.length} integrantes ativos',
                 style: GoogleFonts.manrope(
                   fontSize: 15,
                   color: AppTheme.onSurfaceVariant,
@@ -218,7 +236,7 @@ class _GroupDetailScreenState extends State<GroupDetailScreen> {
     );
   }
 
-  Widget _buildBalanceCard() {
+  Widget _buildBalanceCard(Group group) {
     return Container(
       padding: const EdgeInsets.all(28),
       decoration: BoxDecoration(
@@ -245,7 +263,7 @@ class _GroupDetailScreenState extends State<GroupDetailScreen> {
           LabelCaps('SALDO TOTAL DO GRUPO', color: AppTheme.onPrimaryContainer.withOpacity(0.8)),
           const SizedBox(height: 8),
           NumberDisplay(
-            'R\$ ${widget.group.totalBalance.toStringAsFixed(2).replaceAll('.', ',')}',
+            'R\$ ${group.totalBalance.toStringAsFixed(2).replaceAll('.', ',')}',
             fontSize: 42,
             fontWeight: FontWeight.w800,
             color: Colors.white,
@@ -265,7 +283,7 @@ class _GroupDetailScreenState extends State<GroupDetailScreen> {
                   LabelCaps('VOCÊ DEVE', color: Colors.white.withOpacity(0.7)),
                   const SizedBox(height: 4),
                   NumberDisplay(
-                    'R\$ ${widget.group.youOwe.toStringAsFixed(2).replaceAll('.', ',')}',
+                    'R\$ ${group.youOwe.toStringAsFixed(2).replaceAll('.', ',')}',
                     fontSize: 20,
                     color: Colors.white,
                   ),
@@ -277,7 +295,7 @@ class _GroupDetailScreenState extends State<GroupDetailScreen> {
                   LabelCaps('A RECEBER', color: Colors.white.withOpacity(0.7)),
                   const SizedBox(height: 4),
                   NumberDisplay(
-                    'R\$ ${widget.group.youReceive.toStringAsFixed(2).replaceAll('.', ',')}',
+                    'R\$ ${group.youReceive.toStringAsFixed(2).replaceAll('.', ',')}',
                     fontSize: 20,
                     color: const Color(0xFF00F1FD),
                   ),
@@ -290,13 +308,13 @@ class _GroupDetailScreenState extends State<GroupDetailScreen> {
     );
   }
 
-  Widget _buildAddExpenseButton(BuildContext context) {
+  Widget _buildAddExpenseButton(BuildContext context, Group group) {
     return GestureDetector(
       onTap: () {
         Navigator.push(
           context,
           MaterialPageRoute(
-            builder: (_) => AddExpenseScreen(group: widget.group),
+            builder: (_) => AddExpenseScreen(group: group),
           ),
         );
       },
@@ -326,7 +344,7 @@ class _GroupDetailScreenState extends State<GroupDetailScreen> {
     );
   }
 
-  Widget _buildMembersSection() {
+  Widget _buildMembersSection(Group group) {
     return GlassCard(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -344,7 +362,7 @@ class _GroupDetailScreenState extends State<GroupDetailScreen> {
           Row(
             children: [
               ...List.generate(
-                widget.group.members.length > 3 ? 3 : widget.group.members.length,
+                group.members.length > 3 ? 3 : group.members.length,
                 (i) => Container(
                   margin: EdgeInsets.only(left: i == 0 ? 0 : 0),
                   child: Align(
@@ -362,7 +380,7 @@ class _GroupDetailScreenState extends State<GroupDetailScreen> {
                   ),
                 ),
               ),
-              if (widget.group.members.length > 3)
+              if (group.members.length > 3)
                 Container(
                   width: 40,
                   height: 40,
@@ -373,7 +391,7 @@ class _GroupDetailScreenState extends State<GroupDetailScreen> {
                   ),
                   child: Center(
                     child: Text(
-                      '+${widget.group.members.length - 3}',
+                      '+${group.members.length - 3}',
                       style: GoogleFonts.manrope(
                         fontSize: 12,
                         fontWeight: FontWeight.w700,

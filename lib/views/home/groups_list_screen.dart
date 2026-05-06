@@ -7,6 +7,7 @@ import '../../models/group.dart';
 import '../../theme/app_theme.dart';
 import '../widgets/design_components.dart';
 import '../group_detail/group_detail_screen.dart';
+import 'add_edit_group_screen.dart';
 
 class GroupsListScreen extends StatefulWidget {
   const GroupsListScreen({super.key});
@@ -255,7 +256,12 @@ class _GroupsListScreenState extends State<GroupsListScreen> {
 
   Widget _buildFAB() {
     return GestureDetector(
-      onTap: () {},
+      onTap: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (_) => const AddEditGroupScreen()),
+        );
+      },
       child: Container(
         width: 64,
         height: 64,

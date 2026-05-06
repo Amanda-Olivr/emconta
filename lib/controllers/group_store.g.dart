@@ -97,6 +97,18 @@ mixin _$GroupStore on _GroupStoreBase, Store {
   }
 
   @override
+  void updateGroup(Group updatedGroup) {
+    final _$actionInfo = _$_GroupStoreBaseActionController.startAction(
+      name: '_GroupStoreBase.updateGroup',
+    );
+    try {
+      return super.updateGroup(updatedGroup);
+    } finally {
+      _$_GroupStoreBaseActionController.endAction(_$actionInfo);
+    }
+  }
+
+  @override
   String toString() {
     return '''
 groups: ${groups},

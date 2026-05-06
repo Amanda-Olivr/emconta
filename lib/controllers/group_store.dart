@@ -38,4 +38,12 @@ abstract class _GroupStoreBase with Store {
   void addGroup(Group group) {
     groups.add(group);
   }
+
+  @action
+  void updateGroup(Group updatedGroup) {
+    final index = groups.indexWhere((g) => g.id == updatedGroup.id);
+    if (index != -1) {
+      groups[index] = updatedGroup;
+    }
+  }
 }

@@ -15,6 +15,9 @@ class Group {
   final String? statusDetail; // Ex: "Vence em 12 dias", "Vence hoje"
   final double? pendingProgress; // 0.0 - 1.0 for pending groups
   final double yourPart;
+  final bool isShared;
+  final String budgetType; // 'estimate', 'open'
+  final double estimatedBudget;
 
   Group({
     required this.id,
@@ -29,6 +32,9 @@ class Group {
     this.statusDetail,
     this.pendingProgress,
     this.yourPart = 0.0,
+    this.isShared = false,
+    this.budgetType = 'open',
+    this.estimatedBudget = 0.0,
   });
 
   IconData get categoryIcon {
